@@ -1,7 +1,7 @@
 # Sveltia CMS: the owner edits data.json from his phone.
 backend:
   name: github
-  repo: maiz2003/plant-corner   # becomes <owner>/plant-corner after the transfer
+  repo: theplantcornereg/plant-corner
   branch: main
 media_folder: img
 public_folder: img
