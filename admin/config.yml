@@ -1,0 +1,34 @@
+# Sveltia CMS: the owner edits data.json from his phone.
+backend:
+  name: github
+  repo: maiz2003/plant-corner   # becomes <owner>/plant-corner after the transfer
+  branch: main
+media_folder: img
+public_folder: img
+collections:
+  - name: store
+    label: المحل
+    files:
+      - name: catalog
+        label: المنتجات والتوصيل
+        file: data.json
+        media_folder: img
+        public_folder: img
+        fields:
+          - {name: delivery, label: التوصيل (المناطق والرسوم والمواعيد), widget: text, required: false}
+          - name: items
+            label: المنتجات
+            label_singular: منتج
+            widget: list
+            summary: "{{fields.ar}} · {{fields.p}} ج.م"
+            fields:
+              - {name: ar, label: الاسم, widget: string}
+              - {name: en, label: الاسم بالإنجليزي, widget: string, required: false}
+              - {name: d, label: الوصف, widget: text, required: false}
+              - {name: p, label: السعر بالجنيه, widget: number, value_type: int}
+              - {name: c, label: القسم, widget: select, options: [بوكيهات وبوكسات, نباتات, بالونات, مكافحة آفات]}
+              - {name: img, label: الصورة, widget: image, required: false}
+              - {name: n, label: عدد الزهور تقريبا, widget: number, value_type: int, required: false}
+              - {name: dg, label: الزبون يختار رقم البالون, widget: boolean, default: false, required: false}
+              - {name: hide, label: مش متاح حاليا (يختفي من الموقع), widget: boolean, default: false, required: false}
+              - {name: feat, label: يظهر في الصور الكبيرة فوق, widget: boolean, default: false, required: false}
