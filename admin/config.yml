@@ -32,3 +32,12 @@ collections:
               - {name: dg, label: الزبون يختار رقم البالون, widget: boolean, default: false, required: false}
               - {name: hide, label: مش متاح حاليا (يختفي من الموقع), widget: boolean, default: false, required: false}
               - {name: feat, label: يظهر في الصور الكبيرة فوق, widget: boolean, default: false, required: false}
+              - name: sz
+                label: المقاسات (لو المنتج له أكتر من مقاس، والسعر فوق يبقى أقل سعر)
+                label_singular: مقاس
+                widget: list
+                required: false
+                summary: "{{fields.l}} · {{fields.p}} ج.م"
+                fields:
+                  - {name: l, label: المقاس, widget: string}
+                  - {name: p, label: السعر بالجنيه, widget: number, value_type: int}

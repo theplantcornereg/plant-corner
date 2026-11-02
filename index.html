@@ -57,7 +57,8 @@
   .desc{font-size:.8rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px}
   .meta{font-size:.78rem;color:var(--green2);font-weight:500;margin-top:3px}
   .dg{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--muted);margin-top:4px}
-  .dg select{font:inherit;border:1px solid var(--line);border-radius:10px;padding:2px 8px;background:#fff;color:var(--ink)}
+  .dg{flex-wrap:wrap}
+  .dg select{max-width:100%;font:inherit;border:1px solid var(--line);border-radius:10px;padding:2px 8px;background:#fff;color:var(--ink)}
   .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px;margin-top:auto;padding-top:8px}
   .price{font-weight:700;color:var(--blush);white-space:nowrap}
   .add{border:0;background:var(--green);color:#fff;border-radius:99px;height:36px;padding:0 .9rem;font:inherit;font-weight:700;cursor:pointer;white-space:nowrap}
@@ -175,7 +176,8 @@ main.innerHTML = CATS.map((c, ci) => `
           <span class="desc">${esc(it.d)}</span>
           ${it.n ? `<span class="meta">🌸 ${it.n === 1 ? "وردة واحدة" : `حوالي ${it.n} زهرة`}</span>` : ""}
           ${it.dg ? `<label class="dg">اختار الرقم <select data-i="${i}" aria-label="رقم البالون">${[...Array(10).keys()].map(d => `<option>${d}</option>`).join("")}</select></label>` : ""}
-          <div class="foot"><span class="price">${money(it.p)}</span><span class="ctl" data-i="${i}"></span></div>
+          ${it.sz?.length ? `<label class="dg">المقاس <select data-s="${i}" aria-label="المقاس">${it.sz.map((z, k) => `<option value="${k}">${esc(z.l)}</option>`).join("")}</select></label>` : ""}
+          <div class="foot"><span class="price" data-p="${i}">${money(it.sz?.length ? it.sz[0].p : it.p)}</span><span class="ctl" data-i="${i}"></span></div>
         </div>
       </article>`).join("")}</div></section>`).join("");
 
@@ -186,8 +188,11 @@ tabs.addEventListener("click", e => {
   document.getElementById(b.dataset.t).scrollIntoView({behavior: "smooth"});
 });
 
-// cart key = item index, plus "#digit" for number balloons so each digit is its own line
-const keyOf = i => { const s = main.querySelector(`select[data-i="${i}"]`); return s ? `${i}#${s.value}` : `${i}`; };
+// cart key = item index, plus "#digit" for number balloons and "@size" for sized plants, so each choice is its own line
+const keyOf = i => {
+  const d = main.querySelector(`select[data-i="${i}"]`), s = main.querySelector(`select[data-s="${i}"]`);
+  return `${i}${d ? "#" + d.value : ""}${s ? "@" + s.value : ""}`;
+};
 function renderCtl(i){
   const q = cart[keyOf(i)] || 0, el = main.querySelector(`.ctl[data-i="${i}"]`);
   el.innerHTML = q ? `<span class="step"><button data-a="-1" aria-label="شيل واحد">−</button><span>${q}</span><button data-a="1" aria-label="زوّد واحد">+</button></span>`
@@ -203,16 +208,24 @@ main.addEventListener("click", e => {
   renderCtl(i);
   updateCart();
 });
-main.addEventListener("change", e => { if (e.target.matches("select[data-i]")) renderCtl(+e.target.dataset.i); });
+main.addEventListener("change", e => {
+  const s = e.target.closest("select[data-i], select[data-s]"); if (!s) return;
+  const i = +(s.dataset.i ?? s.dataset.s);
+  if (s.dataset.s !== undefined) main.querySelector(`.price[data-p="${i}"]`).textContent = money(ITEMS[i].sz[s.value].p);
+  renderCtl(i);
+});
 
 function updateCart(){
-  const lines = Object.entries(cart).map(([k, q]) => { const [i, d] = k.split("#"); return [ITEMS[i], q, d]; });
-  const total = lines.reduce((s, [it, q]) => s + it.p * q, 0);
+  const lines = Object.entries(cart).map(([k, q]) => {
+    const [, i, d, s] = k.match(/^(\d+)(?:#(\d))?(?:@(\d+))?$/), it = ITEMS[i], z = s !== undefined ? it.sz[s] : null;
+    return [it, q, d, z, z ? z.p : it.p];
+  });
+  const total = lines.reduce((s, [, q, , , p]) => s + p * q, 0);
   const count = lines.reduce((s, [, q]) => s + q, 0);
   document.getElementById("sum").textContent = `${count === 1 ? "منتج واحد" : count === 2 ? "منتجين" : count <= 10 ? `${count} منتجات` : `${count} منتج`} · ${money(total)}`;
   document.getElementById("waOrder").href = waLink(
     "طلب جديد من موقع The Plant Corner 🌷\n" +
-    lines.map(([it, q, d]) => `• ${q} × ${it.ar}${d !== undefined ? ` (رقم ${d})` : ""} (${money(it.p * q)})`).join("\n") +
+    lines.map(([it, q, d, z, p]) => `• ${q} × ${it.ar}${d !== undefined ? ` (رقم ${d})` : ""}${z ? ` (${z.l})` : ""} (${money(p * q)})`).join("\n") +
     `\nالإجمالي: ${money(total)}\n\nالاسم:\nالمنطقة:\nالعنوان:\nميعاد التوصيل:`);
   document.getElementById("cart").classList.toggle("on", count > 0);
 }
